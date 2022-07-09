@@ -58,7 +58,12 @@ const StageHeaderComponent = function (props) {
         onSetStageUnFull,
         showBranding,
         stageSizeMode,
-        vm
+        vm,
+
+        isShowCoordinate,
+        onTriggerCoordinate,
+        onZoomOutCoordinateFontSize,
+        onZoomInCoordinateFontSize,
     } = props;
 
     let header = null;
@@ -110,6 +115,18 @@ const StageHeaderComponent = function (props) {
                 []
             ) : (
                 <div className={styles.stageSizeToggleGroup}>
+                    <div>
+                        <span className={styles.btn} onClick={onTriggerCoordinate}>{isShowCoordinate ? '关闭坐标' : '开启坐标'}</span>
+                        {
+                            isShowCoordinate ? (
+                                <>
+                                    <span className={styles.btn} onClick={onZoomOutCoordinateFontSize}>缩小字体</span>
+                                    <span className={styles.btn} onClick={onZoomInCoordinateFontSize}>放大字体</span>
+                                </>
+                            ) : null
+                        }
+                    </div>
+
                     <div>
                         <Button
                             className={classNames(
@@ -191,7 +208,12 @@ StageHeaderComponent.propTypes = {
     onSetStageUnFull: PropTypes.func.isRequired,
     showBranding: PropTypes.bool.isRequired,
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),
-    vm: PropTypes.instanceOf(VM).isRequired
+    vm: PropTypes.instanceOf(VM).isRequired,
+
+    isShowCoordinate: PropTypes.bool.isRequired, // 标识是否显示网格坐标
+    onTriggerCoordinate: PropTypes.func.isRequired, // 控制是否显示网格坐标
+    onZoomOutCoordinateFontSize: PropTypes.func.isRequired, // 缩小网格坐标系的字体大小
+    onZoomInCoordinateFontSize: PropTypes.func.isRequired, // 放大网格坐标系的字体大小
 };
 
 StageHeaderComponent.defaultProps = {

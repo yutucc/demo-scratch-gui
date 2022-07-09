@@ -94,3 +94,10 @@
 .stage-button-toggled-off {
     filter: saturate(0);
 }
+
+.btn {
+    margin: 0 10px;
+
+    user-select: none;
+    cursor: pointer;
+}
