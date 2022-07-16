@@ -11,7 +11,12 @@ import {setPlayer, setFullScreen} from '../reducers/mode.js';
 import locales from 'scratch-l10n';
 import {detectLocale} from './detect-locale';
 
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+import { createApp } from '@/utils/dva';
+
+import models from '@/models/index';
+
+// dva 中自带有 __REDUX_DEVTOOLS_EXTENSION_COMPOSE__ 所以不需要额外再配置
+// const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 /*
  * Higher Order Component to provide redux state. If an `intl` prop is provided
@@ -40,7 +45,8 @@ const AppStateHOC = function (WrappedComponent, localesOnly) {
                 // browser modal
                 reducers = {locales: localesReducer};
                 initialState = {locales: initializedLocales};
-                enhancer = composeEnhancers();
+                // enhancer = composeEnhancers(); 注释掉的这段是原本 redux + redux-saga 的配置写法
+                enhancer = [];
             } else {
                 // You are right, this is gross. But it's necessary to avoid
                 // importing unneeded code that will crash unsupported browsers.
@@ -75,14 +81,25 @@ const AppStateHOC = function (WrappedComponent, localesOnly) {
                     locales: initializedLocales,
                     scratchGui: initializedGui
                 };
-                enhancer = composeEnhancers(guiMiddleware);
+                // enhancer = composeEnhancers(guiMiddleware); 注释掉的这段是原本 redux + redux-saga 的配置写法
+                enhancer = [guiMiddleware];
             }
-            const reducer = combineReducers(reducers);
-            this.store = createStore(
-                reducer,
-                initialState,
-                enhancer
-            );
+
+            // 注释掉的这段是原本 redux 的配置写法，把 store 的注入换成 dva
+            // const reducer = combineReducers(reducers);
+            // this.store = createStore(
+            //     reducer,
+            //     initialState,
+            //     enhancer
+            // );
+
+            const dvaApp = createApp({
+                initialState: initialState,
+                models: models,
+                extraReducers: reducers,
+                extraEnhancers: enhancer,
+            });
+            this.store = dvaApp.getStore();
         }
         componentDidUpdate (prevProps) {
             if (localesOnly) return;

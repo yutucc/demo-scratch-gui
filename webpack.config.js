@@ -28,7 +28,11 @@ const base = {
         chunkFilename: 'chunks/[name].js'
     },
     resolve: {
-        symlinks: false
+        symlinks: false,
+        extensions: ['.js', '.json', '.jsx'],
+        alias: {
+            '@': path.resolve(__dirname, './src'),
+        },
     },
     module: {
         rules: [{
