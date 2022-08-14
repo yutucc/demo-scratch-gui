@@ -146,7 +146,8 @@ class Blocks extends React.Component {
             this.props.customProceduresVisible !== nextProps.customProceduresVisible ||
             this.props.locale !== nextProps.locale ||
             this.props.anyModalVisible !== nextProps.anyModalVisible ||
-            this.props.stageSize !== nextProps.stageSize
+            this.props.stageSize !== nextProps.stageSize ||
+            this.props.role !== nextProps.role
         );
     }
     componentDidUpdate (prevProps) {
@@ -160,6 +161,11 @@ class Blocks extends React.Component {
         // Do not check against prevProps.toolboxXML because that may not have been rendered.
         if (this.props.isVisible && this.props.toolboxXML !== this._renderedToolboxXML) {
             this.requestToolboxUpdate();
+        }
+
+        // 如果角色有变化，重新设置角色
+        if (this.props.role !== prevProps.role) {
+            this.ScratchBlocks.setRole(this.props.role);
         }
 
         if (this.props.isVisible === prevProps.isVisible) {
@@ -639,7 +645,8 @@ Blocks.propTypes = {
     vm: PropTypes.instanceOf(VM).isRequired,
     workspaceMetrics: PropTypes.shape({
         targets: PropTypes.objectOf(PropTypes.object)
-    })
+    }),
+    role: PropTypes.string, // 角色
 };
 
 Blocks.defaultOptions = {
@@ -686,7 +693,8 @@ const mapStateToProps = state => ({
     messages: state.locales.messages,
     toolboxXML: state.scratchGui.toolbox.toolboxXML,
     customProceduresVisible: state.scratchGui.customProcedures.active,
-    workspaceMetrics: state.scratchGui.workspaceMetrics
+    workspaceMetrics: state.scratchGui.workspaceMetrics,
+    role: state.global.role, // 当前用户角色的标识
 });
 
 const mapDispatchToProps = dispatch => ({

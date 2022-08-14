@@ -5,6 +5,7 @@ import {connect} from 'react-redux';
 import ReactModal from 'react-modal';
 import VM from 'scratch-vm';
 import {injectIntl, intlShape} from 'react-intl';
+import bindAll from 'lodash.bindall';
 
 import ErrorBoundaryHOC from '../lib/error-boundary-hoc.jsx';
 import {
@@ -40,14 +41,24 @@ import cloudManagerHOC from '../lib/cloud-manager-hoc.jsx';
 import GUIComponent from '../components/gui/gui.jsx';
 import {setIsScratchDesktop} from '../lib/isScratchDesktop.js';
 
+import { getSearchObj } from '@/utils/url';
+
 console.log('API_URL :>> ', API_URL);
 console.log('MY_ENV :>> ', MY_ENV);
 
 class GUI extends React.Component {
+    constructor (props) {
+        super(props);
+        bindAll(this, [
+            'setRole',
+        ]);
+    }
+
     componentDidMount () {
         setIsScratchDesktop(this.props.isScratchDesktop);
         this.props.onStorageInit(storage);
         this.props.onVmInit(this.props.vm);
+        this.setRole();
     }
     componentDidUpdate (prevProps) {
         if (this.props.projectId !== prevProps.projectId && this.props.projectId !== null) {
@@ -59,6 +70,24 @@ class GUI extends React.Component {
             this.props.onProjectLoaded();
         }
     }
+
+    /**
+     * 根据 url 参数，设置角色
+     */
+     setRole() {
+        const search = getSearchObj();
+        const role = search.role;
+
+        if (!role) {
+            return;
+        }
+
+        this.props.dispatch({
+            type: 'global/_setRole',
+            payload: role,
+        });
+    }
+
     render () {
         if (this.props.isError) {
             throw new Error(
@@ -158,6 +187,7 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = dispatch => ({
+    dispatch,
     onExtensionButtonClick: () => dispatch(openExtensionLibrary()),
     onActivateTab: tab => dispatch(activateTab(tab)),
     onActivateCostumesTab: () => dispatch(activateTab(COSTUMES_TAB_INDEX)),

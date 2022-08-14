@@ -54,6 +54,10 @@
     align-items: center;
 }
 
+.sprite-image-inner__isInvisible {
+    filter: grayscale(100%);
+}
+
 .sprite-image {
     user-select: none;
     pointer-events: none;
@@ -104,6 +108,20 @@
 
 [dir="rtl"] .delete-button {
     left: -.625rem;
+}
+
+.visibleButton {
+    position: absolute;
+    top: -.625rem;
+    z-index: auto;
+}
+
+[dir="ltr"] .visibleButton {
+    left: -.625rem;
+}
+
+[dir="rtl"] .visibleButton {
+    right: -.625rem;
 }
 
 .number {

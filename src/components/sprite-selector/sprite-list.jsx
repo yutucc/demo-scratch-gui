@@ -30,7 +30,9 @@ const SpriteList = function (props) {
         ordering,
         raised,
         selectedId,
-        items
+        items,
+        isHadSpriteVisibilityAuth,
+        onInvisibleSprite,
     } = props;
 
     const isSpriteDrag = draggingType === DragConstants.SPRITE;
@@ -68,6 +70,11 @@ const SpriteList = function (props) {
                         DragConstants.BACKPACK_SOUND,
                         DragConstants.BACKPACK_CODE].includes(draggingType);
 
+                    // 如果当前用户没有权限并且该角色处于隐藏状态，则不在列表上渲染
+                    if (!isHadSpriteVisibilityAuth && sprite.isInvisible) {
+                        return null;
+                    }
+
                     return (
                         <SortableAsset
                             className={classNames(styles.spriteWrapper, {
@@ -94,6 +101,10 @@ const SpriteList = function (props) {
                                 onDeleteButtonClick={onDeleteSprite}
                                 onDuplicateButtonClick={onDuplicateSprite}
                                 onExportButtonClick={onExportSprite}
+
+                                isInvisible={sprite.isInvisible}
+                                isHadSpriteVisibilityAuth={isHadSpriteVisibilityAuth}
+                                onInvisibleButtonClick={onInvisibleSprite}
                             />
                         </SortableAsset>
                     );
@@ -132,7 +143,9 @@ SpriteList.propTypes = {
     onSelectSprite: PropTypes.func,
     ordering: PropTypes.arrayOf(PropTypes.number),
     raised: PropTypes.bool,
-    selectedId: PropTypes.string
+    selectedId: PropTypes.string,
+    isHadSpriteVisibilityAuth: PropTypes.bool, // true：有控制角色可见性状态的按钮。false：反之
+    onInvisibleSprite: PropTypes.func, // 控制角色可见性状态的函数
 };
 
 export default SortableHOC(SpriteList);

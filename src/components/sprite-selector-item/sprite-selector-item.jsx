@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import DeleteButton from '../delete-button/delete-button.jsx';
+import InvisibleButton from '../invisible-button/invisible-button.jsx';
 import styles from './sprite-selector-item.css';
 import {ContextMenuTrigger} from 'react-contextmenu';
 import {DangerousMenuItem, ContextMenu, MenuItem} from '../context-menu/context-menu.jsx';
@@ -32,7 +33,7 @@ const SpriteSelectorItem = props => (
         )}
         {props.costumeURL ? (
             <div className={styles.spriteImageOuter}>
-                <div className={styles.spriteImageInner}>
+                <div className={classNames(styles.spriteImageInner, { [styles['sprite-image-inner__isInvisible']]: props.isInvisible })}>
                     <img
                         className={styles.spriteImage}
                         draggable={false}
@@ -53,6 +54,14 @@ const SpriteSelectorItem = props => (
                 onClick={props.onDeleteButtonClick}
             />
         ) : null }
+        {(props.selected && props.isHadSpriteVisibilityAuth && props.onInvisibleButtonClick) ? (
+            <InvisibleButton
+                className={styles.visibleButton}
+                isInvisible={props.isInvisible}
+                onClick={props.onInvisibleButtonClick}
+            />
+        ) : null}
+
         {props.onDuplicateButtonClick || props.onDeleteButtonClick || props.onExportButtonClick ? (
             <ContextMenu id={`${props.name}-${contextMenuId++}`}>
                 {props.onDuplicateButtonClick ? (
@@ -102,7 +111,10 @@ SpriteSelectorItem.propTypes = {
     onMouseEnter: PropTypes.func,
     onMouseLeave: PropTypes.func,
     preventContextMenu: PropTypes.bool,
-    selected: PropTypes.bool.isRequired
+    selected: PropTypes.bool.isRequired,
+    onInvisibleButtonClick: PropTypes.func, // 控制角色可见性状态的函数
+    isHadSpriteVisibilityAuth: PropTypes.bool, // true：有控制角色可见性状态的按钮。false：反之
+    isInvisible: PropTypes.bool, // true：隐藏角色
 };
 
 export default SpriteSelectorItem;

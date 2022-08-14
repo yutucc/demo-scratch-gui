@@ -45,6 +45,8 @@ const TargetPane = ({
     stageSize,
     sprites,
     vm,
+    isHadSpriteVisibilityAuth,
+    onInvisibleSprite,
     ...componentProps
 }) => (
     <div
@@ -77,6 +79,9 @@ const TargetPane = ({
             onSelectSprite={onSelectSprite}
             onSpriteUpload={onSpriteUpload}
             onSurpriseSpriteClick={onSurpriseSpriteClick}
+
+            isHadSpriteVisibilityAuth={isHadSpriteVisibilityAuth}
+            onInvisibleSprite={onInvisibleSprite}
         />
         <div className={styles.stageSelectorWrapper}>
             {stage.id && <StageSelector
@@ -158,7 +163,9 @@ TargetPane.propTypes = {
     sprites: PropTypes.objectOf(spriteShape),
     stage: spriteShape,
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,
-    vm: PropTypes.instanceOf(VM)
+    vm: PropTypes.instanceOf(VM),
+    isHadSpriteVisibilityAuth: PropTypes.bool, // true：有控制角色可见性状态的按钮。false：反之
+    onInvisibleSprite: PropTypes.func, // 控制角色可见性状态的函数
 };
 
 export default TargetPane;

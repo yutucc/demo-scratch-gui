@@ -28,7 +28,8 @@ class SpriteSelectorItem extends React.PureComponent {
             'handleMouseDown',
             'handleDragEnd',
             'handleDrag',
-            'handleTouchEnd'
+            'handleTouchEnd',
+            'handleInvisible',
         ]);
 
         this.dragRecognizer = new DragRecognizer({
@@ -98,6 +99,15 @@ class SpriteSelectorItem extends React.PureComponent {
         e.stopPropagation(); // To prevent from bubbling back to handleClick
         this.props.onDuplicateButtonClick(this.props.id);
     }
+
+    /**
+     * 修改角色的能否可见的状态
+     */
+    handleInvisible (e) {
+        e.stopPropagation(); // To prevent from bubbling back to handleClick
+        this.props.onInvisibleButtonClick(this.props.id, !this.props.isInvisible);
+    }
+
     handleExport (e) {
         e.stopPropagation();
         this.props.onExportButtonClick(this.props.id);
@@ -126,6 +136,8 @@ class SpriteSelectorItem extends React.PureComponent {
             receivedBlocks,
             costumeURL,
             vm,
+            isHadSpriteVisibilityAuth,
+            onInvisibleButtonClick,
             /* eslint-enable no-unused-vars */
             ...props
         } = this.props;
@@ -141,6 +153,9 @@ class SpriteSelectorItem extends React.PureComponent {
                 onMouseDown={this.handleMouseDown}
                 onMouseEnter={this.handleMouseEnter}
                 onMouseLeave={this.handleMouseLeave}
+
+                isHadSpriteVisibilityAuth={isHadSpriteVisibilityAuth}
+                onInvisibleButtonClick={onInvisibleButtonClick ? this.handleInvisible : null}
                 {...props}
             />
         );
@@ -164,7 +179,10 @@ SpriteSelectorItem.propTypes = {
     onExportButtonClick: PropTypes.func,
     receivedBlocks: PropTypes.bool.isRequired,
     selected: PropTypes.bool,
-    vm: PropTypes.instanceOf(VM).isRequired
+    vm: PropTypes.instanceOf(VM).isRequired,
+    isInvisible: PropTypes.bool, // true：隐藏角色
+    isHadSpriteVisibilityAuth: PropTypes.bool, // true：有控制角色可见性状态的按钮。false：反之
+    onDuplicateButtonClick: PropTypes.func, // 控制角色可见性状态的函数
 };
 
 const mapStateToProps = (state, {id}) => ({

@@ -3,6 +3,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import {intlShape, injectIntl} from 'react-intl';
+import ScratchBlocks from 'scratch-blocks';
+import find from 'lodash.find';
 
 import {
     openSpriteLibrary,
@@ -23,6 +25,9 @@ import {highlightTarget} from '../reducers/targets';
 import {fetchSprite, fetchCode} from '../lib/backpack-api';
 import randomizeSpritePosition from '../lib/randomize-sprite-position';
 import downloadBlob from '../lib/download-blob';
+
+import authority from '@/lib/authority';
+import { verifyAuth } from '@/lib/role';
 
 class TargetPane extends React.Component {
     constructor (props) {
@@ -47,7 +52,8 @@ class TargetPane extends React.Component {
             'handlePaintSpriteClick',
             'handleFileUploadClick',
             'handleSpriteUpload',
-            'setFileInput'
+            'setFileInput',
+            'handleInvisibleSprite',
         ]);
     }
     componentDidMount () {
@@ -90,6 +96,38 @@ class TargetPane extends React.Component {
     handleDuplicateSprite (id) {
         this.props.vm.duplicateSprite(id);
     }
+
+    /**
+     * 修改角色的能否可见的状态
+     * @param {String | Number} id target id
+     * @param {Boolean} isInvisible
+     */
+    handleInvisibleSprite (id, isInvisible) {
+        // 在 vm 中设置当前角色的 isInvisible 状态，并返回该角色的所有 block
+        const blocks = this.props.vm.invisibleSprite(id, isInvisible);
+
+        if (!blocks._blocks) {
+            return;
+        }
+
+        const allRootBlocks = [];
+
+        // 找出当前角色的所有积木的 root 积木
+        for (const key in blocks._blocks) {
+            const block = ScratchBlocks.getMainWorkspace().getBlockById(key);
+            const rootBlock = block.getRootBlock();
+
+            if (!find(allRootBlocks, { id: rootBlock.id})) {
+                allRootBlocks.push(rootBlock);
+            }
+        }
+
+        // 使用 block 的函数，将积木设置隐藏状态（详情可见：scratch-blocks 库）
+        allRootBlocks.forEach((block) => {
+            block.menuSetInvisible(isInvisible);
+        });
+    }
+
     handleExportSprite (id) {
         const spriteName = this.props.vm.runtime.getTargetById(id).getName();
         const saveLink = document.createElement('a');
@@ -268,6 +306,8 @@ class TargetPane extends React.Component {
                 onSelectSprite={this.handleSelectSprite}
                 onSpriteUpload={this.handleSpriteUpload}
                 onSurpriseSpriteClick={this.handleSurpriseSpriteClick}
+                isHadSpriteVisibilityAuth={verifyAuth(this.props.role, authority.spriteVisibility)}
+                onInvisibleSprite={this.handleInvisibleSprite}
             />
         );
     }
@@ -294,7 +334,8 @@ const mapStateToProps = state => ({
     sprites: state.scratchGui.targets.sprites,
     stage: state.scratchGui.targets.stage,
     raiseSprites: state.scratchGui.blockDrag,
-    workspaceMetrics: state.scratchGui.workspaceMetrics
+    workspaceMetrics: state.scratchGui.workspaceMetrics,
+    role: state.global.role,
 });
 
 const mapDispatchToProps = dispatch => ({

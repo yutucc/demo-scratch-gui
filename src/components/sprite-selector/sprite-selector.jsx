@@ -67,6 +67,8 @@ const SpriteSelectorComponent = function (props) {
         spriteFileInput,
         sprites,
         stageSize,
+        isHadSpriteVisibilityAuth,
+        onInvisibleSprite,
         ...componentProps
     } = props;
     let selectedSprite = sprites[selectedId];
@@ -111,6 +113,8 @@ const SpriteSelectorComponent = function (props) {
                 onDuplicateSprite={onDuplicateSprite}
                 onExportSprite={onExportSprite}
                 onSelectSprite={onSelectSprite}
+                isHadSpriteVisibilityAuth={isHadSpriteVisibilityAuth}
+                onInvisibleSprite={onInvisibleSprite}
             />
             <ActionMenu
                 className={styles.addButton}
@@ -186,7 +190,9 @@ SpriteSelectorComponent.propTypes = {
             order: PropTypes.number.isRequired
         })
     }),
-    stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired
+    stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,
+    isHadSpriteVisibilityAuth: PropTypes.bool, // true：有控制角色可见性状态的按钮。false：反之
+    onInvisibleSprite: PropTypes.func, // 控制角色可见性状态的函数
 };
 
 export default injectIntl(SpriteSelectorComponent);
