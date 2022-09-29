@@ -22,6 +22,8 @@ import StageSelectorComponent from '../components/stage-selector/stage-selector.
 import backdropLibraryContent from '../lib/libraries/backdrops.json';
 import {handleFileUpload, costumeUpload} from '../lib/file-uploader.js';
 
+import { uploadBackdropToQiniu } from '@/utils/index.js';
+
 const dragTypes = [
     DragConstants.COSTUME,
     DragConstants.SOUND,
@@ -103,19 +105,26 @@ class StageSelector extends React.Component {
     }
     handleBackdropUpload (e) {
         const storage = this.props.vm.runtime.storage;
+        const nativeSize = this.props.vm.renderer.getNativeSize() || [];
+
         this.props.onShowImporting();
         handleFileUpload(e.target, (buffer, fileType, fileName, fileIndex, fileCount) => {
             costumeUpload(buffer, fileType, storage, vmCostumes => {
                 this.props.vm.setEditingTarget(this.props.id);
                 vmCostumes.forEach((costume, i) => {
                     costume.name = `${fileName}${i ? i + 1 : ''}`;
+
+                    // 这里需要做一下判断，只对有 originAsset 进行这一步操作
+                    if (costume.originAsset) {
+                        uploadBackdropToQiniu(costume.originAsset);
+                    }
                 });
                 this.handleNewBackdrop(vmCostumes).then(() => {
                     if (fileIndex === fileCount - 1) {
                         this.props.onCloseImporting();
                     }
                 });
-            }, this.props.onCloseImporting);
+            }, this.props.onCloseImporting, true, nativeSize);
         }, this.props.onCloseImporting);
     }
     handleFileUploadClick (e) {

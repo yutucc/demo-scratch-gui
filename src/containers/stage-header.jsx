@@ -1,7 +1,7 @@
 /*
  * @Author: wuqinfa
  * @Date: 2022-06-20 10:26:16
- * @LastEditTime: 2022-07-09 11:05:02
+ * @LastEditTime: 2022-09-29 15:50:59
  * @LastEditors: wuqinfa
  * @Description:
  */
@@ -12,6 +12,9 @@ import VM from 'scratch-vm';
 import {STAGE_SIZE_MODES} from '../lib/layout-constants';
 import {setStageSize} from '../reducers/stage-size';
 import {setFullScreen} from '../reducers/mode';
+import {
+    setStageNativeSize,
+} from '../reducers/stage-size';
 
 import {connect} from 'react-redux';
 
@@ -26,6 +29,8 @@ class StageHeader extends React.Component {
             'handleTriggerCoordinate',
             'handleZoomOutCoordinateFontSize',
             'handleZoomInCoordinateFontSize',
+            'handleOpenStageNativeSizePopover',
+            'handleCloseStageNativeSizePopover',
         ]);
 
         this.minCoordinateFontSize = 10;
@@ -34,6 +39,7 @@ class StageHeader extends React.Component {
 
         this.state = {
             isShowCoordinate: false, // 是否显示坐标网格
+            stageNativeSizePopoverOpen: false,
         };
     }
     componentDidMount () {
@@ -86,6 +92,20 @@ class StageHeader extends React.Component {
         this.props.vm.runtime.setCoordinateFontSize(temp);
     }
 
+    /**
+     * 打开 stageNativeSize 的 Popover 组件
+     */
+    handleOpenStageNativeSizePopover () {
+        this.setState({stageNativeSizePopoverOpen: true});
+    }
+
+    /**
+     * 关闭 stageNativeSize 的 Popover 组件
+     */
+    handleCloseStageNativeSizePopover () {
+        this.setState({stageNativeSizePopoverOpen: false});
+    }
+
     render () {
         const {
             ...props
@@ -98,6 +118,10 @@ class StageHeader extends React.Component {
                 onTriggerCoordinate={this.handleTriggerCoordinate}
                 onZoomOutCoordinateFontSize={this.handleZoomOutCoordinateFontSize}
                 onZoomInCoordinateFontSize={this.handleZoomInCoordinateFontSize}
+
+                stageNativeSizePopoverOpen={this.state.stageNativeSizePopoverOpen}
+                onOpenStageNativeSizePopover={this.handleOpenStageNativeSizePopover}
+                onCloseStageNativeSizePopover={this.handleCloseStageNativeSizePopover}
             />
         );
     }
@@ -109,21 +133,28 @@ StageHeader.propTypes = {
     onSetStageUnFull: PropTypes.func.isRequired,
     showBranding: PropTypes.bool,
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),
-    vm: PropTypes.instanceOf(VM).isRequired
+    vm: PropTypes.instanceOf(VM).isRequired,
+
+    stageNativeSize: PropTypes.array.isRequired,
+    onSetStageNativeSize: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = state => ({
     stageSizeMode: state.scratchGui.stageSize.stageSize,
     showBranding: state.scratchGui.mode.showBranding,
     isFullScreen: state.scratchGui.mode.isFullScreen,
-    isPlayerOnly: state.scratchGui.mode.isPlayerOnly
+    isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
+
+    stageNativeSize: state.scratchGui.stageSize.stageNativeSize, // 当前舞台尺寸
 });
 
 const mapDispatchToProps = dispatch => ({
     onSetStageLarge: () => dispatch(setStageSize(STAGE_SIZE_MODES.large)),
     onSetStageSmall: () => dispatch(setStageSize(STAGE_SIZE_MODES.small)),
     onSetStageFull: () => dispatch(setFullScreen(true)),
-    onSetStageUnFull: () => dispatch(setFullScreen(false))
+    onSetStageUnFull: () => dispatch(setFullScreen(false)),
+
+    onSetStageNativeSize: (stageNativeSize) => dispatch(setStageNativeSize(stageNativeSize)),
 });
 
 export default connect(

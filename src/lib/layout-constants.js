@@ -1,3 +1,9 @@
+/*
+ * @Author: wuqinfa
+ * @Date: 2022-06-20 10:26:16
+ * @LastEditors: wuqinfa
+ * @Description:
+ */
 import keyMirror from 'keymirror';
 
 /**
@@ -45,6 +51,28 @@ STAGE_DISPLAY_SCALES[STAGE_DISPLAY_SIZES.large] = 1; // large mode, wide browser
 STAGE_DISPLAY_SCALES[STAGE_DISPLAY_SIZES.largeConstrained] = 0.85; // large mode but narrow browser
 STAGE_DISPLAY_SCALES[STAGE_DISPLAY_SIZES.small] = 0.5; // small mode, regardless of browser size
 
+// 官网 scratch 舞台区域宽高像素大小
+const OFFICIAL_STAGE_WIDTH = 480;
+const OFFICIAL_STAGE_HEIGHT = 360;
+
+const STAGE_NATIVE_SIZES = [
+    {
+        width: 480,
+        height: 360,
+        title: '横版 4:3',
+    },
+    {
+        width: 480,
+        height: 800,
+        title: '竖版',
+    },
+    {
+        width: 1280,
+        height: 720,
+        title: '横版 16:9',
+    },
+];
+
 export default {
     standardStageWidth: 480,
     standardStageHeight: 360,
@@ -56,5 +84,9 @@ export {
     BLOCKS_DEFAULT_SCALE,
     STAGE_DISPLAY_SCALES,
     STAGE_DISPLAY_SIZES,
-    STAGE_SIZE_MODES
+    STAGE_SIZE_MODES,
+
+    STAGE_NATIVE_SIZES,
+    OFFICIAL_STAGE_WIDTH,
+    OFFICIAL_STAGE_HEIGHT,
 };

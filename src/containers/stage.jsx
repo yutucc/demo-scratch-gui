@@ -1,9 +1,11 @@
 import bindAll from 'lodash.bindall';
+import isEqual from 'lodash.isequal';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Renderer from 'scratch-render';
 import VM from 'scratch-vm';
 import {connect} from 'react-redux';
+import { setSvgArtBoardWidthHeight } from 'scratch-paint';
 
 import {STAGE_DISPLAY_SIZES} from '../lib/layout-constants';
 import {getEventXY} from '../lib/touch-utils';
@@ -11,6 +13,9 @@ import VideoProvider from '../lib/video/video-provider';
 import {BitmapAdapter as V2BitmapAdapter} from 'scratch-svg-renderer';
 
 import StageComponent from '../components/stage/stage.jsx';
+
+import { getStageDimensions } from '@/lib/screen-utils.js';
+import { getShortSidePreferredSize } from '@/utils';
 
 import {
     activateColorPicker,
@@ -40,8 +45,13 @@ class Stage extends React.Component {
             'setDragCanvas',
             'clearDragCanvas',
             'drawDragCanvas',
-            'positionDragCanvas'
+            'positionDragCanvas',
+
+            'onWindowResize',
+            'resizeCanvas',
+            'onStageNativeSizeChange',
         ]);
+
         this.state = {
             mouseDownTimeoutId: null,
             mouseDownPosition: null,
@@ -75,6 +85,9 @@ class Stage extends React.Component {
         this.attachMouseEvents(this.canvas);
         this.updateRect();
         this.props.vm.runtime.addListener('QUESTION', this.questionListener);
+
+        /* render 完后马上计算一下舞台和 canva 的尺寸 */
+        this.resizeCanvas();
     }
     shouldComponentUpdate (nextProps, nextState) {
         return this.props.stageSize !== nextProps.stageSize ||
@@ -83,7 +96,8 @@ class Stage extends React.Component {
             this.props.isFullScreen !== nextProps.isFullScreen ||
             this.state.question !== nextState.question ||
             this.props.micIndicator !== nextProps.micIndicator ||
-            this.props.isStarted !== nextProps.isStarted;
+            this.props.isStarted !== nextProps.isStarted ||
+            !isEqual(this.props.stageNativeSize, nextProps.stageNativeSize);
     }
     componentDidUpdate (prevProps) {
         if (this.props.isColorPicking && !prevProps.isColorPicking) {
@@ -91,6 +105,17 @@ class Stage extends React.Component {
         } else if (!this.props.isColorPicking && prevProps.isColorPicking) {
             this.stopColorPickingLoop();
         }
+
+        // 切换全屏模式时，重新计算舞台尺寸
+        if (!isEqual(this.props.isFullScreen, prevProps.isFullScreen)) {
+            this.resizeCanvas();
+        }
+
+        // 修改舞台尺寸时，执行这段逻辑
+        if (!isEqual(this.props.stageNativeSize, prevProps.stageNativeSize)) {
+            this.onStageNativeSizeChange();
+        }
+
         this.updateRect();
         this.renderer.resize(this.rect.width, this.rect.height);
     }
@@ -139,10 +164,14 @@ class Stage extends React.Component {
     attachRectEvents () {
         window.addEventListener('resize', this.updateRect);
         window.addEventListener('scroll', this.updateRect);
+
+        // window.addEventListener('resize', this.onWindowResize);
     }
     detachRectEvents () {
         window.removeEventListener('resize', this.updateRect);
         window.removeEventListener('scroll', this.updateRect);
+
+        // window.removeEventListener('resize', this.onWindowResize);
     }
     updateRect () {
         this.rect = this.canvas.getBoundingClientRect();
@@ -405,6 +434,84 @@ class Stage extends React.Component {
     setDragCanvas (canvas) {
         this.dragCanvas = canvas;
     }
+
+    /**
+     * 目前舞台的最大宽高是不变的，不用执行这段函数
+     * 如果再做得优化一点，把舞台的宽高变成是可以变的话，需要有这段逻辑
+     */
+    onWindowResize (event) {
+        /* event.isTrusted
+            true：非直接通过 “window.dispatchEvent(new Event('resize'));” 触发，属于用户调整窗口大小后触发的事件
+            false：直接通过 “window.dispatchEvent(new Event('resize'));” 触发，目的是为了调整 block 编辑区域的大小 */
+        if (event.isTrusted) {
+            this.resizeCanvas();
+        }
+    }
+
+    resizeCanvas (params) {
+        const stageDimensions = getStageDimensions(this.props.stageSize, this.props.isFullScreen);
+
+        const {
+            stageWidth = stageDimensions.width,
+            stageHeight = stageDimensions.height,
+        } = params || {};
+        const {
+            stageNativeSize = [],
+        } = this.props;
+        const canvasSize = getShortSidePreferredSize(stageWidth, stageHeight, stageNativeSize[0], stageNativeSize[1]); // 通过短边优先占满的原则，算出在新舞台尺寸比例下 canvas 的 css 宽高
+
+        this.canvas.style.width = `${canvasSize.width}px`;
+        this.canvas.style.height = `${canvasSize.height}px`;
+    }
+
+    /**
+     * 响应舞台尺寸改变时需要同步处理的操作
+     */
+     onStageNativeSizeChange () {
+        const {
+            stageNativeSize = [],
+        } = this.props;
+        console.log('stageNativeSize :>> ', stageNativeSize);
+        const width = stageNativeSize[0];
+        const height = stageNativeSize[1];
+
+        const stageTarget = this.props.vm.runtime.getTargetForStage(); // 当前舞台 RenderTarget 对象
+        const getCurrentCostume = stageTarget.getCurrentCostume(); // 当前舞台 RenderTarget 对象的当前装扮
+
+        this.props.vm.runtime.setStageNativeSize(width, height); // 设置舞台的物理宽高，作为渲染时的实际宽高
+
+        this.resizeCanvas();
+
+        setSvgArtBoardWidthHeight(width, height); // 重新设置 paint 可编辑区域的宽高，并且重置与其相关的变量
+
+        V2BitmapAdapter.setStageNativeSize([width, height]); // 设置 适配器的静态属性，记录当前的舞台尺寸，物理宽高
+
+        // 目前舞台的最大宽高是不变的，不用执行这段函数。如果再做得优化一点，把舞台的宽高变成是可以变的话，需要有这段逻辑
+        // window.dispatchEvent(new Event('resize')); // 用来调整 block 编辑区域的大小，避免因舞台区域大小的变化导致编辑区域多出一段空白
+
+        if (!getCurrentCostume.originAsset) {
+            return;
+        }
+
+        const bitmapAdapter = new V2BitmapAdapter();
+
+        // 如果当前舞台 RenderTarget 对象的当前装扮中有 originAsset（背景原图的 asset 对象），则将原图适配当前尺寸后，更新到当前舞台 RenderTarget 对象的装扮中
+        // bitmapAdapter.changeBackdropBitmap(getCurrentCostume.originAsset.data, getCurrentCostume.originAsset.assetType.contentType)
+        // 不能直接用 getCurrentCostume.originAsset.assetType.contentType , 在 storage 的 src/AssetType.js 对于所有位图的 contentType 写死了 image/png， 不知道是故意这样写的还是 bug
+        bitmapAdapter.changeBackdropBitmap(getCurrentCostume.originAsset.data, `image/${getCurrentCostume.originAsset.dataFormat}`)
+            .then((imageData) => {
+                this.props.vm.updateStageTargetBitmap(
+                    stageTarget.currentCostume,
+                    imageData,
+                    imageData.width / 2,
+                    imageData.height / 2,
+                    2,
+                    getCurrentCostume.originAsset.dataFormat
+                );
+            })
+            .catch(() => {});
+    }
+
     render () {
         const {
             vm, // eslint-disable-line no-unused-vars
@@ -447,7 +554,8 @@ const mapStateToProps = state => ({
     isStarted: state.scratchGui.vmStatus.started,
     micIndicator: state.scratchGui.micIndicator,
     // Do not use editor drag style in fullscreen or player mode.
-    useEditorDragStyle: !(state.scratchGui.mode.isFullScreen || state.scratchGui.mode.isPlayerOnly)
+    useEditorDragStyle: !(state.scratchGui.mode.isFullScreen || state.scratchGui.mode.isPlayerOnly),
+    stageNativeSize: state.scratchGui.stageSize.stageNativeSize,
 });
 
 const mapDispatchToProps = dispatch => ({

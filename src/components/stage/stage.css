@@ -7,7 +7,10 @@
         Fixes a few extra pixels of margin/padding, that adds on to the bottom
         of the element, which messes up the chrome padding consistency
     */
-    display: block;
+    /* display: block; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     border-radius: $space;
     border: $stage-standard-border-width solid $ui-black-transparent;
@@ -28,6 +31,8 @@
 
 .stage.full-screen {
     border: $stage-full-screen-border-width solid rgb(126, 133, 151);
+
+    background-color: #E2F7FF;
 }
 
 .with-color-picker {
@@ -50,22 +55,33 @@
     position: relative;
 }
 
+/* .stage 里包括的唯一元素，在这个里面再放舞台的 canvas 和其它元素
+canvas 用来撑开这个 .stageContainer 的宽高，而其它元素设置成 absolute 后，就可以不用关心自身的宽高，直接跟这个元素一致就好 */
+.stageContainer {
+    position: relative;
+}
+
 /* we want stage overlays to all be positioned in the same spot as the stage, but can't put them inside the border
 because we want their overflow to be visible, and the bordered element must have overflow: hidden set so that the
 stage doesn't "spill" out from under its rounded corners. instead, shift these over by the border width. */
 .stage-overlays {
     position: absolute;
-    top: $stage-standard-border-width;
-    left: $stage-standard-border-width;
+    /* top: $stage-standard-border-width;
+    left: $stage-standard-border-width; */
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
 
     /* the overlay itself should not capture pointer events; only its child elements can do that */
     pointer-events: none;
 }
 
-.stage-overlays.full-screen {
+/* .stage-overlays.full-screen {
     top: $stage-full-screen-border-width;
     left: $stage-full-screen-border-width;
-}
+} */
 
 .monitor-wrapper,
 .frame-wrapper,
@@ -75,6 +91,13 @@ stage doesn't "spill" out from under its rounded corners. instead, shift these o
     left: 0;
     pointer-events: none;
 }
+
+/* 设置跟父容器（ .stageContainer ）一样的宽高 */
+.monitor-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
 
 .dragging-sprite {
     position: absolute;
@@ -89,10 +112,13 @@ stage doesn't "spill" out from under its rounded corners. instead, shift these o
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    top: 0;
+    /* top: 0; */
     left: 0;
     overflow: hidden;
     pointer-events: none;
+
+    bottom: 0;
+    width: 100%;
 }
 
 .mic-indicator {
@@ -105,6 +131,8 @@ stage doesn't "spill" out from under its rounded corners. instead, shift these o
 .question-wrapper {
     z-index: $z-index-stage-question;
     pointer-events: auto;
+
+    width: 100%;
 }
 
 .frame {

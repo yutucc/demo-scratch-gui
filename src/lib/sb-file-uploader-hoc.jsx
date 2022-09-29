@@ -50,7 +50,8 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 'handleStartSelectingFileUpload',
                 'handleChange',
                 'onload',
-                'removeFileObjects'
+                'removeFileObjects',
+                'initStageNativeSize',
             ]);
         }
         componentDidUpdate (prevProps) {
@@ -156,6 +157,8 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                             this.props.onSetProjectTitle(uploadedProjectTitle);
                         }
                         loadingSuccess = true;
+
+                        this.initStageNativeSize();
                     })
                     .catch(error => {
                         log.warn(error);
@@ -180,6 +183,16 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             this.fileReader = null;
             this.fileToUpload = null;
         }
+
+        /**
+         * 通过本地工程文件加载工程后，用工程文件中的 stageNativeSize 设置当前舞台的 stageNativeSize
+         */
+        initStageNativeSize () {
+            const stageNativeSize = [this.props.vm.runtime.constructor.STAGE_WIDTH, this.props.vm.runtime.constructor.STAGE_HEIGHT]
+
+            this.props.onSetStageNativeSize(stageNativeSize);
+        }
+
         render () {
             const {
                 /* eslint-disable no-unused-vars */

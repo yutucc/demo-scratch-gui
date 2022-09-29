@@ -65,8 +65,11 @@ const getStageDimensions = (stageSize, isFullScreen) => {
         stageDimensions.scale = stageDimensions.width / stageDimensions.widthDefault;
     } else {
         stageDimensions.scale = STAGE_DISPLAY_SCALES[stageSize];
-        stageDimensions.height = stageDimensions.scale * stageDimensions.heightDefault;
-        stageDimensions.width = stageDimensions.scale * stageDimensions.widthDefault;
+        // stageDimensions.height = stageDimensions.scale * stageDimensions.heightDefault;
+        // stageDimensions.width = stageDimensions.scale * stageDimensions.widthDefault;
+        // 非全屏模式下，舞台的最大宽高就固定这两个值
+        stageDimensions.height = layout.standardStageHeight;
+        stageDimensions.width = layout.standardStageWidth;
     }
 
     // Round off dimensions to prevent resampling/blurriness

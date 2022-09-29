@@ -101,3 +101,45 @@
     user-select: none;
     cursor: pointer;
 }
+
+.stageNativeSize {
+    padding: 4px 0;
+
+    font-size: 14px;
+}
+
+.stageNativeSizeButton {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    position: relative;
+
+    padding: 0 8px;
+    width: 110px;
+    height: 36px;
+
+    cursor: pointer;
+
+    color: #425170;
+}
+
+.stageNativeSizeButton:hover {
+    background: #E9F9FF;
+}
+.stageNativeSizeButton--sel {
+    background: #E9F9FF;
+}
+.stageNativeSizeButton--sel::before {
+    position: absolute;
+    left: 0;
+    top: 0;
+
+    border-radius: 0 3px 3px 0;
+    width: 3px;
+    height: 100%;
+
+    background: hsla(215, 100%, 65%, 1);
+
+    content: '';
+}

@@ -1,9 +1,16 @@
+/*
+ * @Author: wuqinfa
+ * @Date: 2022-06-20 10:26:16
+ * @LastEditors: wuqinfa
+ * @Description:
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import bindAll from 'lodash.bindall';
 import VM from 'scratch-vm';
 import PaintEditor from 'scratch-paint';
 import {inlineSvgFonts} from 'scratch-svg-renderer';
+import isEqual from 'lodash.isequal';
 
 import {connect} from 'react-redux';
 
@@ -18,7 +25,8 @@ class PaintEditorWrapper extends React.Component {
     shouldComponentUpdate (nextProps) {
         return this.props.imageId !== nextProps.imageId ||
             this.props.rtl !== nextProps.rtl ||
-            this.props.name !== nextProps.name;
+            this.props.name !== nextProps.name ||
+            !isEqual(this.props.stageNativeSize, nextProps.stageNativeSize);
     }
     handleUpdateName (name) {
         this.props.vm.renameCostume(this.props.selectedCostumeIndex, name);
@@ -44,11 +52,13 @@ class PaintEditorWrapper extends React.Component {
         const {
             selectedCostumeIndex,
             vm,
+            stageNativeSize,
             ...componentProps
         } = this.props;
 
         return (
             <PaintEditor
+                key={`key-${stageNativeSize[0]}-${stageNativeSize[1]}`}
                 {...componentProps}
                 image={vm.getCostume(selectedCostumeIndex)}
                 onUpdateImage={this.handleUpdateImage}
@@ -67,7 +77,8 @@ PaintEditorWrapper.propTypes = {
     rotationCenterY: PropTypes.number,
     rtl: PropTypes.bool,
     selectedCostumeIndex: PropTypes.number.isRequired,
-    vm: PropTypes.instanceOf(VM)
+    vm: PropTypes.instanceOf(VM),
+    stageNativeSize: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = (state, {selectedCostumeIndex}) => {
@@ -86,10 +97,12 @@ const mapStateToProps = (state, {selectedCostumeIndex}) => {
         rtl: state.locales.isRtl,
         selectedCostumeIndex: index,
         vm: state.scratchGui.vm,
-        zoomLevelId: targetId
+        zoomLevelId: targetId,
+        stageNativeSize: state.scratchGui.stageSize.stageNativeSize,
     };
 };
 
 export default connect(
     mapStateToProps
 )(PaintEditorWrapper);
+

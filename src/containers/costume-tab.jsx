@@ -37,6 +37,8 @@ import searchIcon from '../components/action-menu/icon--search.svg';
 import costumeLibraryContent from '../lib/libraries/costumes.json';
 import backdropLibraryContent from '../lib/libraries/backdrops.json';
 
+import { uploadBackdropToQiniu } from '@/utils/index.js';
+
 let messages = defineMessages({
     addLibraryBackdropMsg: {
         defaultMessage: 'Choose a Backdrop',
@@ -194,18 +196,27 @@ class CostumeTab extends React.Component {
     handleCostumeUpload (e) {
         const storage = this.props.vm.runtime.storage;
         const targetId = this.props.vm.editingTarget.id;
+
+        const isStage = this.props.vm.editingTarget.isStage; // true: 舞台背景、false: 不是舞台背景
+        const nativeSize = this.props.vm.renderer.getNativeSize() || [];
+
         this.props.onShowImporting();
         handleFileUpload(e.target, (buffer, fileType, fileName, fileIndex, fileCount) => {
             costumeUpload(buffer, fileType, storage, vmCostumes => {
                 vmCostumes.forEach((costume, i) => {
                     costume.name = `${fileName}${i ? i + 1 : ''}`;
+
+                    // 上传造型这个功能，背景和角色是共同的，这里需要做一下判断，只对有 originAsset 进行这一步操作
+                    if (costume.originAsset) {
+                        uploadBackdropToQiniu(costume.originAsset);
+                    }
                 });
                 this.handleNewCostume(vmCostumes, false, targetId).then(() => {
                     if (fileIndex === fileCount - 1) {
                         this.props.onCloseImporting();
                     }
                 });
-            }, this.props.onCloseImporting);
+            }, this.props.onCloseImporting, isStage, nativeSize);
         }, this.props.onCloseImporting);
     }
     handleFileUploadClick () {

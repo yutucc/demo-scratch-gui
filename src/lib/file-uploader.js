@@ -96,8 +96,10 @@ const createVMAsset = function (storage, assetType, dataFormat, data) {
  * caching this costume in storage - This function should be responsible for
  * adding the costume to the VM and handling other UI flow that should come after adding the costume
  * @param {Function} handleError The function to execute if there is an error parsing the costume
+ * @param {Boolean} isStage
+ * @param {Array} nativeSize
  */
-const costumeUpload = function (fileData, fileType, storage, handleCostume, handleError = () => {}) {
+const costumeUpload = function (fileData, fileType, storage, handleCostume, handleError = () => {}, isStage = false, nativeSize = []) {
     let costumeFormat = null;
     let assetType = null;
     switch (fileType) {
@@ -115,7 +117,7 @@ const costumeUpload = function (fileData, fileType, storage, handleCostume, hand
         // Convert .bmp files to .png to compress them. .bmps are completely uncompressed,
         // and would otherwise take up a lot of storage space and take much longer to upload and download.
         bmpConverter(fileData).then(dataUrl => {
-            costumeUpload(dataUrl, 'image/png', storage, handleCostume);
+            costumeUpload(dataUrl, 'image/png', storage, handleCostume, isStage);
         });
         return; // Return early because we're triggering another proper costumeUpload
     }
@@ -132,7 +134,7 @@ const costumeUpload = function (fileData, fileType, storage, handleCostume, hand
                 if (frameNumber === numFrames - 1) {
                     handleCostume(costumes);
                 }
-            }, handleError);
+            }, handleError, isStage);
         });
         return; // Abandon this load, do not try to load gif itself
     }
@@ -152,6 +154,23 @@ const costumeUpload = function (fileData, fileType, storage, handleCostume, hand
         handleCostume([vmCostume]);
     };
 
+    /**
+     * 仿照 addCostumeFromBuffer，专门用来给背景图使用
+     * 其作用跟 addCostumeFromBuffer 大体相同，只是将背景图的原图通过storage.createAsset 生成 Asset 对象后，保存在当前舞台造型的 originAsset 字段中
+     */
+    const addBackdropBitmapCostumeFromBuffer = function (dataBuffer) {
+        const vmCostume = createVMAsset(
+            storage,
+            assetType,
+            costumeFormat,
+            dataBuffer,
+            new Uint8Array(fileData),
+        );
+        // 这里的 vmCostume 并没有 size 属性
+        handleCostume([vmCostume]);
+    };
+
+
     if (costumeFormat === storage.DataFormat.SVG) {
         // Must pass in file data as a Uint8Array,
         // passing in an array buffer causes the sprite/costume
@@ -160,8 +179,13 @@ const costumeUpload = function (fileData, fileType, storage, handleCostume, hand
         addCostumeFromBuffer(new Uint8Array(fileData));
     } else {
         // otherwise it's a bitmap
-        bitmapAdapter.importBitmap(fileData, fileType).then(addCostumeFromBuffer)
-            .catch(handleError);
+        if (isStage) {
+            bitmapAdapter.importBackdropBitmap(fileData, fileType, nativeSize).then(addBackdropBitmapCostumeFromBuffer)
+                .catch(handleError);
+        } else {
+            bitmapAdapter.importBitmap(fileData, fileType).then(addCostumeFromBuffer)
+                .catch(handleError);
+        }
     }
 };
 

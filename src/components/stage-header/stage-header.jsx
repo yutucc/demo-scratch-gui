@@ -4,17 +4,20 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {connect} from 'react-redux';
 import VM from 'scratch-vm';
+import Popover from 'react-popover';
+import isEqual from 'lodash.isequal';
 
 import Box from '../box/box.jsx';
 import Button from '../button/button.jsx';
 import Controls from '../../containers/controls.jsx';
 import {getStageDimensions} from '../../lib/screen-utils';
-import {STAGE_SIZE_MODES} from '../../lib/layout-constants';
+import { STAGE_SIZE_MODES, STAGE_NATIVE_SIZES } from '../../lib/layout-constants';
 
 import fullScreenIcon from './icon--fullscreen.svg';
-import largeStageIcon from './icon--large-stage.svg';
-import smallStageIcon from './icon--small-stage.svg';
+// import largeStageIcon from './icon--large-stage.svg';
+// import smallStageIcon from './icon--small-stage.svg';
 import unFullScreenIcon from './icon--unfullscreen.svg';
+import stageSizeIcon from './stageSize.svg';
 
 import scratchLogo from '../menu-bar/scratch-logo.svg';
 import styles from './stage-header.css';
@@ -64,9 +67,47 @@ const StageHeaderComponent = function (props) {
         onTriggerCoordinate,
         onZoomOutCoordinateFontSize,
         onZoomInCoordinateFontSize,
+
+        stageNativeSize,
+        onSetStageNativeSize,
+        stageNativeSizePopoverOpen,
+        onOpenStageNativeSizePopover,
+        onCloseStageNativeSizePopover,
     } = props;
 
     let header = null;
+
+    const stageNativeSizePopoverBody = (
+        <div className={styles.stageNativeSize}>
+            {
+                STAGE_NATIVE_SIZES.map((item) => {
+                    const {
+                        width,
+                        height,
+                        title,
+                    } = item;
+                    const isCurSel = isEqual(stageNativeSize, [width, height]);
+
+                    return (
+                        <div
+                            key={`key_${width}_${height}`}
+                            className={classNames(
+                                styles.stageNativeSizeButton,
+                                {
+                                    [styles['stageNativeSizeButton--sel']]: isCurSel,
+                                }
+                            )}
+                            onClick={() => {
+                                onSetStageNativeSize([width, height]);
+                            }}
+                        >
+                            {title}
+                        </div>
+                    );
+                })
+            }
+        </div>
+    );
 
     if (isFullScreen) {
         const stageDimensions = getStageDimensions(null, true);
@@ -127,7 +168,30 @@ const StageHeaderComponent = function (props) {
                         }
                     </div>
 
-                    <div>
+                    {/* 新增 stageNativeSize 的 Popover 组件，用于选择舞台尺寸，如图： ![](http://res.watermcc.top/blog/2022/20220929-1664437753.png) */}
+                    <Popover
+                        className="custom-popover"
+                        body={stageNativeSizePopoverBody}
+                        isOpen={stageNativeSizePopoverOpen}
+                        preferPlace="below"
+                        onOuterAction={onCloseStageNativeSizePopover}
+                    >
+                        <div>
+                            <Button
+                                className={styles.stageButton}
+                                onClick={onOpenStageNativeSizePopover}
+                            >
+                                <img
+                                    className={styles.stageButtonIcon}
+                                    draggable={false}
+                                    src={stageSizeIcon}
+                                />
+                            </Button>
+                        </div>
+                    </Popover>
+
+                    {/* FIXME: 原本用于等比例放大缩小舞台尺寸的功能就先注释掉 */}
+                    {/* <div>
                         <Button
                             className={classNames(
                                 styles.stageButton,
@@ -160,7 +224,7 @@ const StageHeaderComponent = function (props) {
                                 src={largeStageIcon}
                             />
                         </Button>
-                    </div>
+                    </div> */}
                 </div>
             );
         header = (
@@ -214,6 +278,12 @@ StageHeaderComponent.propTypes = {
     onTriggerCoordinate: PropTypes.func.isRequired, // 控制是否显示网格坐标
     onZoomOutCoordinateFontSize: PropTypes.func.isRequired, // 缩小网格坐标系的字体大小
     onZoomInCoordinateFontSize: PropTypes.func.isRequired, // 放大网格坐标系的字体大小
+
+    stageNativeSize: PropTypes.array.isRequired, // 当前舞台尺寸
+    onSetStageNativeSize: PropTypes.func.isRequired, // 设置当前舞台尺寸
+    stageNativeSizePopoverOpen: PropTypes.bool.isRequired, // 用来控制 stageNativeSize 的 Popover 组件是否显示
+    onOpenStageNativeSizePopover: PropTypes.func.isRequired, // 打开 stageNativeSize 的 Popover 组件
+    onCloseStageNativeSizePopover: PropTypes.func.isRequired, // 关闭 stageNativeSize 的 Popover 组件
 };
 
 StageHeaderComponent.defaultProps = {
